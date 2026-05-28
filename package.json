@@ -1,6 +1,6 @@
 {
   "name": "overwolf-console-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local stdio MCP server that wraps the Overwolf Developer Console statistics API, so MCP clients (Claude Desktop, etc.) can fetch an app's analytics on demand.",
   "keywords": [
     "mcp",
