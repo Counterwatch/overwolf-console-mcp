@@ -1,5 +1,9 @@
 # overwolf-console-mcp
 
+[![npm version](https://img.shields.io/npm/v/overwolf-console-mcp.svg)](https://www.npmjs.com/package/overwolf-console-mcp)
+[![CI](https://github.com/Counterwatch/overwolf-console-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Counterwatch/overwolf-console-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A local **stdio [MCP](https://modelcontextprotocol.io) server** that wraps the
 **Overwolf Developer Console statistics API**, so an MCP client (Claude Desktop,
 Cursor, etc.) can fetch your app's analytics on demand — DAU/MAU, installs,

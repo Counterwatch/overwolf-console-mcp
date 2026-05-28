@@ -42,8 +42,9 @@ jobs:
       - name: Verify before publishing
         run: npm run build && npm test && npm run smoke
 
+      # Publishes via npm Trusted Publishing (OIDC) — no stored token. Requires the
+      # `id-token: write` permission above and a trusted publisher configured for this
+      # package on npmjs.com. To fall back to a token instead, add an `NPM_TOKEN`
+      # secret and set `env: { NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} }` on this step.
       - name: Publish to npm
         run: npm publish --provenance --access public
-        env:
-          # Ignored when Trusted Publishing (OIDC) is configured; used otherwise.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
