@@ -19,46 +19,37 @@ revenue this month vs. last."*
 - **Decoupled core**: the API client has no MCP dependency, so it can be lifted into
   a remote (OAuth-hosted) server later without a rewrite.
 
-## Requirements
+## How it works (new to MCP? read this first)
 
-- Node.js **>= 18** (uses the built-in `fetch`).
-- An Overwolf Developer Console account and API key (below).
+You don't install, host, or run anything yourself. An **MCP server** is a small helper
+program that your AI assistant (like Claude Desktop) starts automatically in the
+background. You add a few lines of config — your Overwolf email, API key, and app ID —
+and then just **ask questions in plain English** (e.g. *"what was my DAU last week?"*).
+The assistant fetches the answer from Overwolf through this server and explains it.
+No coding, nothing to host.
 
-## Getting an Overwolf API key
+## Quick start (for users)
 
-The key is shown **only once**, so copy it immediately.
+You need two things installed: **[Node.js](https://nodejs.org) 18 or newer** (this is
+what actually runs the server) and an MCP client — **[Claude Desktop](https://claude.ai/download)**
+is the easiest. Then do this once:
 
-1. Sign in to the [Overwolf Developer Console](https://console.overwolf.com).
-2. Go to **Settings → Profile**.
-3. Click **"Revoke and get new API key"**.
-4. **Copy the key right away** — it is displayed a single time. (Revoking
-   invalidates any previous key.)
+### 1. Get your Overwolf API key
 
-Your API requests authenticate with the header
-`authorization: Key {your-email}:{your-api-key}`. This server builds that header for
-you from the `OVERWOLF_EMAIL` and `OVERWOLF_API_KEY` environment variables.
+Sign in to the [Overwolf Developer Console](https://console.overwolf.com) →
+**Settings → Profile** → **"Revoke and get new API key"** → **copy it immediately**
+(it's shown only once; revoking invalidates your previous key).
 
-## Configuration
+### 2. Find your app's ID
 
-Set these via environment variables or a local `.env` file (copy
-[`.env.example`](.env.example); `.env.local` is also supported and takes precedence):
+Grab your app's unique ID from the [Developer Console](https://console.overwolf.com).
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OVERWOLF_EMAIL` | ✅ | Account email used in the auth header. |
-| `OVERWOLF_API_KEY` | ✅ | Console API key (see above). |
-| `OVERWOLF_DEFAULT_APP_ID` | – | App ID used when a tool call omits `app_id`. |
-| `OVERWOLF_BASE_URL` | – | Override the API base URL. Defaults to `https://console.overwolf.com/api/stats`. |
+### 3. Add the server to your assistant
 
-**Never commit a real key.** `.env` is gitignored; `.env.example` ships placeholders only.
-
-> `.env`/`.env.local` are loaded from the **current working directory**, which is convenient for local development (run from the project root). When an MCP client launches the server (e.g. via `npx`), the working directory is the client's, not this project's — so for that use pass credentials through the client config's `env` block (shown below) rather than relying on a `.env` file.
-
-## Use with Claude Desktop
-
-Add the server to your `claude_desktop_config.json`
-(macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`,
-Windows: `%APPDATA%\Claude\claude_desktop_config.json`):
+In Claude Desktop: **Settings → Developer → Edit Config** (or open the file directly —
+Windows: `%APPDATA%\Claude\claude_desktop_config.json`, macOS:
+`~/Library/Application Support/Claude/claude_desktop_config.json`). Paste the block
+below, filling in your email, key, and app ID:
 
 ```json
 {
@@ -76,32 +67,55 @@ Windows: `%APPDATA%\Claude\claude_desktop_config.json`):
 }
 ```
 
-Restart Claude Desktop (fully quit it — not just the window — so it reloads the
-config). The server's tools (e.g. `get_daily_active_users`) then appear. The same
-`command`/`args`/`env` block works in any MCP client that supports stdio servers.
+If your config already has an `"mcpServers"` block, just add the `"overwolf-console"`
+entry inside it.
 
-> **Windows:** if Claude Desktop can't launch `npx` directly (a common Windows quirk
-> — it spawns the command without a shell), use the `cmd` wrapper instead:
-> `"command": "cmd"`, `"args": ["/c", "npx", "-y", "overwolf-console-mcp"]`.
+> **On Windows**, if your assistant can't start `npx`, change `"command"` to `"cmd"`
+> and `"args"` to `["/c", "npx", "-y", "overwolf-console-mcp"]`.
 
-## Usage
+### 4. Restart your assistant
 
-Once it's connected, just ask your assistant in plain English — it picks the right
-tool and fills in your `app_id` from `OVERWOLF_DEFAULT_APP_ID`. For example:
+**Fully quit** Claude Desktop (not just the window — quit it from the system tray) and
+reopen it. The first query takes a few extra seconds while `npx` downloads the package.
+**You never clone a repo or build anything** — `npx` handles all of that.
 
-- "What was my DAU over the last 30 days?"
-- "How has MAU trended over the past year?"
-- "Show app installs by country for the last 90 days."
-- "Break down this month's net ad revenue."
-- "What's my day-1 and day-7 user retention?"
-- "Any crash spikes on the latest app version?"
+### 5. Ask away
 
-For discovery, ask *"list the available Overwolf stats endpoints"* (calls
-`list_endpoints`). Responses come back as compact JSON capped at `max_rows`
-(default 100). Mind the **5 requests / 60s** rate limit — the server throttles and
-retries automatically, so avoid firing many queries at once.
+- *"What was my DAU over the last 30 days?"*
+- *"How has MAU trended over the past year?"*
+- *"Show app installs by country for the last 90 days."*
+- *"Break down this month's net ad revenue."*
+- *"What's my day-1 and day-7 user retention?"*
+- *"Any crash spikes on the latest app version?"*
 
-## Run locally (development)
+To see everything it can pull, ask *"list the available Overwolf stats endpoints."*
+There's a **5 requests / 60 seconds** rate limit (the server throttles and retries for
+you), so avoid firing dozens of queries at once.
+
+The same `"overwolf-console"` block works in other stdio MCP clients (Cursor, Cline,
+etc.) — only the config file's location differs.
+
+## Configuration reference
+
+Credentials come from environment variables — set them in your MCP client's `env` block
+(above), or in a local `.env` file when developing:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OVERWOLF_EMAIL` | ✅ | Account email used in the auth header. |
+| `OVERWOLF_API_KEY` | ✅ | Console API key (from step 1). |
+| `OVERWOLF_DEFAULT_APP_ID` | – | App ID used when a request omits `app_id`. |
+| `OVERWOLF_BASE_URL` | – | Override the API base URL. Defaults to `https://console.overwolf.com/api/stats`. |
+
+The server authenticates with the header `authorization: Key {email}:{api_key}`, built
+from `OVERWOLF_EMAIL` + `OVERWOLF_API_KEY`. **Never commit a real key** — `.env` is
+gitignored and `.env.example` ships placeholders only. (`.env`/`.env.local` are read
+from the current working directory, so for an installed/`npx` server pass credentials
+via the client's `env` block, not a `.env` file.)
+
+## Run locally (for contributors)
+
+Only needed if you want to modify the code — **users don't need this**:
 
 ```bash
 git clone https://github.com/Counterwatch/overwolf-console-mcp.git
