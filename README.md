@@ -76,9 +76,30 @@ Windows: `%APPDATA%\Claude\claude_desktop_config.json`):
 }
 ```
 
-Restart Claude Desktop. The server's tools (e.g. `get_daily_active_users`) will be
-available. The same `command`/`args`/`env` block works in any MCP client that
-supports stdio servers.
+Restart Claude Desktop (fully quit it — not just the window — so it reloads the
+config). The server's tools (e.g. `get_daily_active_users`) then appear. The same
+`command`/`args`/`env` block works in any MCP client that supports stdio servers.
+
+> **Windows:** if Claude Desktop can't launch `npx` directly (a common Windows quirk
+> — it spawns the command without a shell), use the `cmd` wrapper instead:
+> `"command": "cmd"`, `"args": ["/c", "npx", "-y", "overwolf-console-mcp"]`.
+
+## Usage
+
+Once it's connected, just ask your assistant in plain English — it picks the right
+tool and fills in your `app_id` from `OVERWOLF_DEFAULT_APP_ID`. For example:
+
+- "What was my DAU over the last 30 days?"
+- "How has MAU trended over the past year?"
+- "Show app installs by country for the last 90 days."
+- "Break down this month's net ad revenue."
+- "What's my day-1 and day-7 user retention?"
+- "Any crash spikes on the latest app version?"
+
+For discovery, ask *"list the available Overwolf stats endpoints"* (calls
+`list_endpoints`). Responses come back as compact JSON capped at `max_rows`
+(default 100). Mind the **5 requests / 60s** rate limit — the server throttles and
+retries automatically, so avoid firing many queries at once.
 
 ## Run locally (development)
 
