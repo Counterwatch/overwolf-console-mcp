@@ -1,16 +1,15 @@
-name: Claude
+name: Claude Code
 
 # Lets contributors and maintainers mention @claude in an issue or PR to have
-# Claude triage, answer, propose fixes, or open pull requests.
+# Claude triage, answer, review, or implement changes.
 #
-# SETUP (maintainer, one-time) — uses a Claude Pro/Max subscription, NOT metered API
-# billing, so it adds no extra cost (it draws from your plan's usage allowance):
-#   1. Run `claude setup-token` locally (requires an active Pro/Max subscription).
-#   2. Add the generated token as a repository secret named CLAUDE_CODE_OAUTH_TOKEN.
-# Without the secret this workflow is a no-op.
+# AUTH — uses a Claude Pro/Max subscription (no metered API cost): run
+# `claude setup-token` locally and add the result as the CLAUDE_CODE_OAUTH_TOKEN
+# repository secret. (To use metered API billing instead, replace the
+# claude_code_oauth_token input with `anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}`.)
 #
-# (Alternatively, swap `claude_code_oauth_token` below for
-#  `anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}` to use metered API billing.)
+# Workflow permissions are read-only; the installed Claude GitHub App provides the
+# write access for commenting/committing. Actions are SHA-pinned (Dependabot updates them).
 
 on:
   issue_comment:
@@ -31,21 +30,21 @@ jobs:
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
+      contents: read
+      pull-requests: read
+      issues: read
       id-token: write
-      actions: read
+      actions: read # lets Claude read CI results on PRs
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 1
 
       - name: Run Claude Code
+        id: claude
         uses: anthropics/claude-code-action@787c5a0ce96a9a6cfb050ea0c8f4c05f2447c251 # v1
         with:
-          # Default: authenticate with a Claude Pro/Max subscription (no metered cost).
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Fallback: switch to metered API billing instead — comment out the line
-          # above, uncomment the line below, and add an ANTHROPIC_API_KEY repo secret.
-          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Lets Claude read CI results when responding on PRs.
+          additional_permissions: |
+            actions: read
