@@ -1,0 +1,48 @@
+name: Bug report
+description: Something isn't working as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! Please **redact any credentials** (email, API key)
+        from logs and examples before posting.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: I called get_daily_active_users with ... and expected ... but got ...
+    validations:
+      required: true
+  - type: input
+    id: tool
+    attributes:
+      label: Tool / endpoint
+      description: Which MCP tool or endpoint slug was involved?
+      placeholder: get_app_installs / performance/app-installs
+  - type: textarea
+    id: arguments
+    attributes:
+      label: Arguments used
+      description: The arguments you passed (redact secrets).
+      render: json
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server output (stderr)
+      description: Relevant stderr lines from the server (redact secrets).
+      render: shell
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      description: e.g. Claude Desktop 1.x, Cursor, custom client.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: overwolf-console-mcp version + Node.js version (`node -v`).
+      placeholder: overwolf-console-mcp 0.1.0, Node 20.x
+    validations:
+      required: true

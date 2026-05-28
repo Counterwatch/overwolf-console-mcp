@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# npm pack / publish artifacts
+*.tgz
+
+# Secrets / local env — ignore every .env* except the committed template
+.env*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.lh/
+
+# Scratch
+.tmp-research/

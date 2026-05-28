@@ -1,0 +1,26 @@
+# CodeRabbit configuration. CodeRabbit gives public repos Pro-level AI reviews for
+# free — just install the CodeRabbit GitHub app on the repo. Docs: https://docs.coderabbit.ai
+language: en-US
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!dist/**"
+    - "!**/*.map"
+  path_instructions:
+    - path: "src/{config,client,endpoints,format}.ts"
+      instructions: >
+        This is the transport-agnostic core. Flag any import of the MCP SDK
+        (@modelcontextprotocol/sdk) or zod here — the core must stay decoupled.
+    - path: "src/**"
+      instructions: >
+        Flag any writes to stdout (console.log / process.stdout). All logging must
+        go to stderr; stdout is reserved for the MCP stdio protocol.
+chat:
+  auto_reply: true
