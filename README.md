@@ -240,6 +240,15 @@ This repo is built to be friendly to both humans and AI coding agents:
 See [CONTRIBUTING.md](CONTRIBUTING.md) and report security issues per
 [SECURITY.md](SECURITY.md).
 
+## Related projects
+
+- **[overwolf-app-toolkit](https://github.com/Counterwatch/overwolf-app-toolkit)** —
+  a companion, AI-agnostic toolkit for Overwolf app developers. Its `overwolf-log-doctor`
+  diagnoses a single user's **support-log bundle** (sync, auth, GEP, crashes), and an
+  `overwolf-app-primer` explains how Overwolf apps work. Where this MCP answers *"how's my
+  app doing overall?"*, the toolkit answers *"why is **this user** broken?"* — and it can
+  pull this MCP in (as an opt-in plugin) to check whether a finding is app-wide.
+
 ## Disclaimer
 
 Community project. Not affiliated with or endorsed by Overwolf. Endpoint slugs and
