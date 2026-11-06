@@ -52,6 +52,26 @@ test("registry: headline tools are present with friendly names", () => {
   assert.equal(byName.get("get_app_installs")?.slug, "performance/app-installs");
 });
 
+test("registry: revenue tools use only revenue-v2 (legacy revenue/ retires 2026-12-01)", () => {
+  const revenue = ENDPOINTS.filter((e) => e.category === "revenue");
+  assert.ok(revenue.length > 0);
+  for (const ep of revenue) {
+    assert.ok(ep.slug.startsWith("revenue-v2/"), `${ep.toolName} still calls ${ep.slug}`);
+    const days = ep.params.find((p) => p.name === "days_back");
+    assert.ok(
+      !days?.default?.match(/180|365/),
+      `${ep.toolName} defaults days_back to ${days?.default}, which revenue-v2 rejects`,
+    );
+  }
+});
+
+test("resolveParams fills both required filters of monthly-ads-metrics", () => {
+  const ep = ENDPOINTS.find((e) => e.toolName === "get_monthly_ads_metrics")!;
+  const params = resolveParams(ep, {}, { ...baseConfig, defaultAppId: "app-123" });
+  assert.equal(params.window_name, "All Windows");
+  assert.equal(params.country, "All Countries");
+});
+
 test("resolveParams throws when app_id is absent and no default is set", () => {
   const ep = ENDPOINTS.find((e) => e.toolName === "get_daily_active_users")!;
   assert.throws(() => resolveParams(ep, {}, baseConfig), /Missing app_id/);

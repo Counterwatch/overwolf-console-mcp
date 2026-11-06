@@ -31,12 +31,21 @@ const PARAM_DESCRIPTIONS: Record<string, string> = {
   attribution: 'Attribution filter, or "All Attributions".',
   window_name: 'App window name (e.g. "desktop"), or "All Windows".',
   ad_size: 'Ad size, or "All Sizes".',
+  country:
+    'Country as the Revenue dashboard labels it ("Japan", "United Kingdom", ...), the combined "US" or "Non US", or "All Countries". The United States is "US", not "United States".',
+  container_id: 'Ad container ID, or "All Containers".',
 };
 
-function param(name: string, def?: string): EndpointParam {
+// The revenue-v2 endpoints take shorter windows than the performance ones, and not all
+// of them accept "Yesterday".
+const REVENUE_DAYS = 'Time window. Allowed values: "Last 30 Days", "Last 90 Days".';
+const REVENUE_DAYS_WITH_YESTERDAY =
+  'Time window. Allowed values: "Yesterday", "Last 30 Days", "Last 90 Days".';
+
+function param(name: string, def?: string, description?: string): EndpointParam {
   return {
     name,
-    description: PARAM_DESCRIPTIONS[name] ?? `Filter by ${name}.`,
+    description: description ?? PARAM_DESCRIPTIONS[name] ?? `Filter by ${name}.`,
     default: def,
     required: name === "app_id",
   };
@@ -51,8 +60,8 @@ function toolNameFromSlug(slug: string): string {
 /**
  * The endpoint registry. Adding an endpoint is data, not code: append a row here
  * (slug + params with their documented defaults) and a typed tool appears
- * automatically. Slugs and params are taken verbatim from the official Overwolf
- * Postman collections (see README "How to add an endpoint").
+ * automatically. Slugs and params are taken verbatim from Overwolf's API reference
+ * pages (see README "How to add an endpoint").
  *
  * `tool` overrides the derived name for the three headline metrics; everything
  * else uses the derived `get_<slug-tail>` name.
@@ -134,106 +143,109 @@ const RAW: Array<{ slug: string; title: string; params: EndpointParam[]; tool?: 
     params: [param("app_id"), param("days_back", "Last 30 Days")],
   },
 
-  // ----- Revenue -----
+  // ----- Revenue (revenue-v2) -----
+  // The legacy `revenue/` endpoints retire on 2026-12-01. revenue-v2 does not split video
+  // from display ads (they share one auction), so the old per-format tools have no successor.
+  // Per-DAU and monthly figures carry both bases: a bare `arpdau` / `arpmau` is NET, the
+  // `_gross` field beside it is gross.
   {
-    slug: "revenue/daily-ads-revenue-gross-net",
-    title: "Daily Ads Revenue (Gross and Net)",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
-  },
-  {
-    slug: "revenue/month-to-date-revenue-net",
-    title: "Month-to-Date Revenue (Net)",
+    slug: "revenue-v2/revenue-yesterday",
+    title: "Revenue KPI (yesterday vs the same day last week)",
     params: [param("app_id")],
   },
   {
-    slug: "revenue/video-ads-general-metrics",
-    title: "Video Ads General Metrics",
-    params: [param("app_id"), param("days_back", "Last 30 Days"), param("window_name", "All Windows")],
-  },
-  {
-    slug: "revenue/video-ads-revenue-net",
-    title: "Video Ads Revenue (Net)",
-    params: [param("app_id"), param("days_back", "Last 30 Days"), param("window_name", "All Windows")],
-  },
-  {
-    slug: "revenue/display-ads-general-metrics",
-    title: "Display Ads General Metrics",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
-  },
-  {
-    slug: "revenue/display-ads-revenue-net",
-    title: "Display Ads Revenue (Net)",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
-  },
-  {
-    slug: "revenue/video-ads-completion-rate",
-    title: "Video Ads Completion Rate per Window",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
-  },
-  {
-    slug: "revenue/video-ads-detailed-metrics",
-    title: "Video Ads Detailed Metrics",
-    params: [param("app_id"), param("days_back", "Last 30 Days"), param("ad_size", "All Sizes"), param("country_name", "All Countries"), param("window_name", "All Windows")],
-  },
-  {
-    slug: "revenue/display-ads-estimated-metrics",
-    title: "Display Ads Estimated Metrics",
-    params: [param("app_id"), param("days_back", "Last 30 Days"), param("ad_size", "All Sizes"), param("country_name", "All Countries"), param("window_name", "All Windows")],
-  },
-  {
-    slug: "revenue/all-ads-metrics-monthly",
-    title: "All Ads Metrics (Monthly)",
+    slug: "revenue-v2/arpdau-yesterday",
+    title: "ARPDAU KPI (yesterday vs the same day last week, US cents)",
     params: [param("app_id")],
   },
   {
-    slug: "revenue/video-ads-metrics-monthly",
-    title: "Video Ads Metrics (Monthly)",
+    slug: "revenue-v2/rps-yesterday",
+    title: "Revenue per Session KPI (yesterday vs the same day last week, US cents)",
     params: [param("app_id")],
   },
   {
-    slug: "revenue/display-ads-metrics-monthly",
-    title: "Display Ads Metrics (Monthly)",
+    slug: "revenue-v2/cpm-yesterday",
+    title: "CPM KPI (yesterday vs the same day last week, USD)",
     params: [param("app_id")],
   },
   {
-    slug: "revenue/average-ads-container-open-time",
+    slug: "revenue-v2/daily-ads-revenue-gross-net",
+    title: "Daily Ads Revenue (Gross and Net, with 7-day rolling averages)",
+    params: [param("app_id"), param("days_back", "Last 90 Days", REVENUE_DAYS), param("country", "All Countries")],
+  },
+  {
+    slug: "revenue-v2/month-to-date-revenue",
+    title: "Month-to-Date Revenue (Gross and Net)",
+    params: [param("app_id"), param("country", "All Countries")],
+  },
+  {
+    slug: "revenue-v2/ads-revenue-year-over-year",
+    title: "Ads Revenue Year over Year (last 13 months)",
+    params: [param("app_id"), param("country", "All Countries")],
+  },
+  {
+    slug: "revenue-v2/daily-ad-inventory-fill-rate",
+    title: "Daily Ad Inventory and Fill Rate",
+    // This one endpoint filters on `country_name`, not `country`.
+    params: [param("app_id"), param("days_back", "Last 90 Days", REVENUE_DAYS), param("window_name", "All Windows"), param("country_name", "All Countries", PARAM_DESCRIPTIONS.country)],
+  },
+  {
+    slug: "revenue-v2/daily-avg-revenue-per-dau",
+    title: "Daily Average Revenue per DAU (Gross and Net, US cents, with benchmark)",
+    params: [param("app_id"), param("days_back", "Last 90 Days", REVENUE_DAYS_WITH_YESTERDAY), param("country", "All Countries")],
+  },
+  {
+    slug: "revenue-v2/monetized-users-ratio-by-window",
+    title: "Monetized Users Ratio by Window",
+    params: [param("app_id"), param("days_back", "Last 90 Days", REVENUE_DAYS), param("app_version", "All Versions")],
+  },
+  {
+    slug: "revenue-v2/average-ads-container-open-time",
     title: "Average Ads Container Open Time",
-    params: [param("app_id"), param("days_back", "Last 30 Days"), param("window_name", "All Windows")],
+    params: [param("app_id"), param("days_back", "Last 90 Days", REVENUE_DAYS), param("window_name", "All Windows")],
   },
   {
-    slug: "revenue/video-ads-rpm-per-window",
-    title: "Video Ads RPM per Window",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
+    slug: "revenue-v2/country-performance",
+    title: "Country Performance",
+    params: [param("app_id"), param("days_back", "Yesterday", REVENUE_DAYS_WITH_YESTERDAY)],
   },
   {
-    slug: "revenue/daily-avg-revenue-per-dau-per-country",
-    title: "Daily Average Revenue (Gross) per DAU per Country",
-    params: [param("app_id"), param("days_back", "Last 30 Days"), param("country_name", "All Countries")],
+    slug: "revenue-v2/window-performance",
+    title: "Window Performance",
+    params: [param("app_id"), param("days_back", "Last 90 Days", REVENUE_DAYS_WITH_YESTERDAY), param("country", "All Countries")],
   },
   {
-    slug: "revenue/daily-avg-revenue-per-dau-us",
-    title: "Daily Average Revenue (Gross) per DAU - US",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
+    slug: "revenue-v2/ad-size-performance",
+    title: "Ad Size Performance",
+    params: [param("app_id"), param("days_back", "Yesterday", REVENUE_DAYS_WITH_YESTERDAY), param("country", "All Countries")],
   },
   {
-    slug: "revenue/daily-avg-revenue-per-dau-non-us",
-    title: "Daily Average Revenue (Gross) per DAU - Non-US",
-    params: [param("app_id"), param("days_back", "Last 30 Days")],
+    slug: "revenue-v2/daily-ads-metrics",
+    title: "Daily Ads Metrics (by ad size, country, window and container)",
+    params: [
+      param("app_id"),
+      // Overwolf documents "Last 30 Days" as the default, but on 2026-11-06 it answered
+      // 500 "Error fetching data" for every filter combination tried; "Yesterday" works.
+      param(
+        "days_back",
+        "Yesterday",
+        'Time window. Allowed values: "Yesterday", "Last 30 Days" ("Last 30 Days" has been seen to fail with a 500 on the API side).',
+      ),
+      param("ad_size", "All Sizes"),
+      param("window_name", "All Windows"),
+      param("country", "All Countries"),
+      param("container_id", "All Containers"),
+    ],
   },
   {
-    slug: "revenue/ads-revenue-net-yearly-comparison",
-    title: "Ads Revenue (Net) Yearly Comparison",
-    params: [param("app_id")],
-  },
-  {
-    slug: "revenue/monthly-ads-metrics",
-    title: "Monthly Ad Metrics",
-    params: [param("app_id")],
+    slug: "revenue-v2/monthly-ads-metrics",
+    title: "Monthly Ads Metrics (last 13 months)",
+    params: [param("app_id"), param("window_name", "All Windows"), param("country", "All Countries")],
   },
 ];
 
 export const ENDPOINTS: EndpointDef[] = RAW.map((e) => {
-  const category: EndpointCategory = e.slug.startsWith("revenue/") ? "revenue" : "performance";
+  const category: EndpointCategory = e.slug.startsWith("revenue") ? "revenue" : "performance";
   return {
     toolName: e.tool ?? toolNameFromSlug(e.slug),
     slug: e.slug,

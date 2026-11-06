@@ -55,13 +55,14 @@ into a remote (OAuth-hosted) server unchanged.
 
 Endpoints are **data, not code**. To add one, append a row to the `RAW` array in
 `src/endpoints.ts` with the exact slug and params (with their documented defaults)
-taken from the official Overwolf Postman collections:
+taken from Overwolf's API reference pages:
 
-- Performance: https://dev.overwolf.com/assets/openapi/Developers-Console-API.postman_collection.json
-- Revenue: https://dev.overwolf.com/assets/openapi/Developers-Console-Revenue-Statistics-API.postman_collection.json
+- Performance: https://dev.overwolf.com/ow-native/developers-console/dev-console-apis/performance-apis/overview/
+- Revenue: https://dev.overwolf.com/ow-native/developers-console/dev-console-apis/revenue-apis/overview/
 
-Read each item's **request URL** for the slug (the path after `/api/stats/`) and its
-`url.query` keys. A typed tool is generated automatically. Update the registry
+Read each page's **endpoint URL** for the slug (the path after `/api/stats/`) and its
+filters with their defaults. Call a new endpoint live with its defaults before shipping it
+(`npm run live-check` covers DAU only): a documented default can still fail. A typed tool is generated automatically. Update the registry
 integrity test in `tests/core.test.ts` if you change headline tools.
 
 ## Boundaries — do NOT
