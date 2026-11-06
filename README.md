@@ -178,7 +178,8 @@ because video and display ads now share one auction
 
 `app_id` (falls back to `OVERWOLF_DEFAULT_APP_ID`), and where applicable:
 `country_name` on performance tools (capitalized, e.g. `"United States"`, or `"All Countries"`),
-`country` on revenue tools (the dashboard's labels, e.g. `"Japan"`, the combined `"US"` or `"Non US"`, or `"All Countries"`),
+`country` on revenue tools (the dashboard's labels, e.g. `"Japan"`, the combined `"US"` or `"Non US"`, or `"All Countries"`;
+`get_daily_ad_inventory_fill_rate` is the one revenue tool that takes these labels as `country_name` instead),
 `days_back` (performance: `"Last 30 Days"`, `"Last 90 Days"`, `"Last 180 Days"`, `"Last 365 Days"`;
 revenue: `"Last 30 Days"`, `"Last 90 Days"`, and on some tools `"Yesterday"`; each tool's description lists its own),
 `app_version` (or `"All Versions"`), `installation_source` (or `"All Sources"`),
