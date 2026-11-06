@@ -13,7 +13,7 @@ It is open source and `npx`-runnable: point it at your own Overwolf app and ask 
 assistant things like *"what was my DAU over the last 7 days?"* or *"compare net ad
 revenue this month vs. last."*
 
-- **Typed tools** for every documented performance + revenue endpoint (33 of them).
+- **Typed tools** for every documented performance + revenue endpoint (30 of them).
 - **A generic passthrough** (`query_console_stats`) for any endpoint by path.
 - **A discovery tool** (`list_endpoints`) so the assistant can see what's available.
 - **Decoupled core**: the API client has no MCP dependency, so it can be lifted into
@@ -147,7 +147,7 @@ with parameters, or browse below.
 - `get_app_installs` — `performance/app-installs`
 
 <details>
-<summary><strong>All 33 typed tools</strong></summary>
+<summary><strong>All 30 typed tools</strong></summary>
 
 _Performance:_ `get_daily_active_users`, `get_monthly_active_users`,
 `get_app_installs`, `get_app_uninstalls`, `get_dau_per_country`,
@@ -157,27 +157,33 @@ _Performance:_ `get_daily_active_users`, `get_monthly_active_users`,
 `get_app_window_open_duration_distribution`, `get_app_crashes`,
 `get_partner_report_app_game_dau`, `get_app_version_by_dau`
 
-_Revenue:_ `get_daily_ads_revenue_gross_net`, `get_month_to_date_revenue_net`,
-`get_video_ads_general_metrics`, `get_video_ads_revenue_net`,
-`get_display_ads_general_metrics`, `get_display_ads_revenue_net`,
-`get_video_ads_completion_rate`, `get_video_ads_detailed_metrics`,
-`get_display_ads_estimated_metrics`, `get_all_ads_metrics_monthly`,
-`get_video_ads_metrics_monthly`, `get_display_ads_metrics_monthly`,
-`get_average_ads_container_open_time`, `get_video_ads_rpm_per_window`,
-`get_daily_avg_revenue_per_dau_per_country`, `get_daily_avg_revenue_per_dau_us`,
-`get_daily_avg_revenue_per_dau_non_us`, `get_ads_revenue_net_yearly_comparison`,
+_Revenue_ (the `revenue-v2` endpoints): `get_revenue_yesterday`,
+`get_arpdau_yesterday`, `get_rps_yesterday`, `get_cpm_yesterday`,
+`get_daily_ads_revenue_gross_net`, `get_month_to_date_revenue`,
+`get_ads_revenue_year_over_year`, `get_daily_ad_inventory_fill_rate`,
+`get_daily_avg_revenue_per_dau`, `get_monetized_users_ratio_by_window`,
+`get_average_ads_container_open_time`, `get_country_performance`,
+`get_window_performance`, `get_ad_size_performance`, `get_daily_ads_metrics`,
 `get_monthly_ads_metrics`
+
+Revenue figures come in both bases: a bare `arpdau` or `arpmau` is **net**, and the
+`_gross` field beside it is gross. Overwolf's legacy `revenue/` endpoints retire on
+December 1, 2026; the video- and display-specific tools they backed have no successor,
+because video and display ads now share one auction
+([Overwolf's migration table](https://dev.overwolf.com/ow-native/developers-console/dev-console-apis/revenue-apis/overview/#moving-from-the-legacy-endpoints)).
 
 </details>
 
 ### Common parameters
 
 `app_id` (falls back to `OVERWOLF_DEFAULT_APP_ID`), and where applicable:
-`country_name` (capitalized, e.g. `"United States"`, or `"All Countries"`),
-`days_back` (allowed: `"Last 30 Days"`, `"Last 90 Days"`, `"Last 180 Days"`, `"Last 365 Days"`),
+`country_name` on performance tools (capitalized, e.g. `"United States"`, or `"All Countries"`),
+`country` on revenue tools (the dashboard's labels, e.g. `"Japan"`, the combined `"US"` or `"Non US"`, or `"All Countries"`),
+`days_back` (performance: `"Last 30 Days"`, `"Last 90 Days"`, `"Last 180 Days"`, `"Last 365 Days"`;
+revenue: `"Last 30 Days"`, `"Last 90 Days"`, and on some tools `"Yesterday"`; each tool's description lists its own),
 `app_version` (or `"All Versions"`), `installation_source` (or `"All Sources"`),
 `window_name` (or `"All Windows"`), `attribution` (or `"All Attributions"`),
-`ad_size` (or `"All Sizes"`). Every tool also accepts `max_rows` (default **100**).
+`ad_size` (or `"All Sizes"`), `container_id` (or `"All Containers"`). Every tool also accepts `max_rows` (default **100**).
 
 ### Response shape
 
@@ -201,12 +207,12 @@ seconds to wait. Spread out bulk queries accordingly.
 
 Endpoints are **data, not code** — adding one is a single row in the registry.
 
-1. Open the official Postman collection for the endpoint:
-   - Performance: <https://dev.overwolf.com/assets/openapi/Developers-Console-API.postman_collection.json>
-   - Revenue: <https://dev.overwolf.com/assets/openapi/Developers-Console-Revenue-Statistics-API.postman_collection.json>
-2. Find the request and read its **URL** — the slug is everything after
-   `/api/stats/` (e.g. `revenue/monthly-ads-metrics`) — and its **query params**
-   (`url.query`) with their default values.
+1. Open Overwolf's API reference page for the endpoint:
+   - Performance: <https://dev.overwolf.com/ow-native/developers-console/dev-console-apis/performance-apis/overview/>
+   - Revenue: <https://dev.overwolf.com/ow-native/developers-console/dev-console-apis/revenue-apis/overview/>
+2. Read its **endpoint URL** — the slug is everything after `/api/stats/`
+   (e.g. `revenue-v2/monthly-ads-metrics`) — and its **filters** with their defaults.
+   Send every filter: some endpoints answer `400` when one is left out.
 3. Append a row to the `RAW` array in [`src/endpoints.ts`](src/endpoints.ts):
 
    ```ts
