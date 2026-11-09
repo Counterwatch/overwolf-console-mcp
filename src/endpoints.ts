@@ -224,13 +224,8 @@ const RAW: Array<{ slug: string; title: string; params: EndpointParam[]; tool?: 
     title: "Daily Ads Metrics (by ad size, country, window and container)",
     params: [
       param("app_id"),
-      // Overwolf documents "Last 30 Days" as the default, but on 2026-11-06 it answered
-      // 500 "Error fetching data" for every filter combination tried; "Yesterday" works.
-      param(
-        "days_back",
-        "Yesterday",
-        'Time window. Allowed values: "Yesterday", "Last 30 Days" ("Last 30 Days" has been seen to fail with a 500 on the API side).',
-      ),
+      // This endpoint takes no "Last 90 Days" (it answers 400), unlike REVENUE_DAYS_WITH_YESTERDAY.
+      param("days_back", "Last 30 Days", 'Time window. Allowed values: "Yesterday", "Last 30 Days".'),
       param("ad_size", "All Sizes"),
       param("window_name", "All Windows"),
       param("country", "All Countries"),

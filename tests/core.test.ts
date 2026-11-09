@@ -72,6 +72,16 @@ test("resolveParams fills both required filters of monthly-ads-metrics", () => {
   assert.equal(params.country, "All Countries");
 });
 
+test("resolveParams fills every required filter of daily-ads-metrics, 30 days by default", () => {
+  const ep = ENDPOINTS.find((e) => e.toolName === "get_daily_ads_metrics")!;
+  const params = resolveParams(ep, {}, { ...baseConfig, defaultAppId: "app-123" });
+  assert.equal(params.days_back, "Last 30 Days");
+  assert.equal(params.ad_size, "All Sizes");
+  assert.equal(params.window_name, "All Windows");
+  assert.equal(params.country, "All Countries");
+  assert.equal(params.container_id, "All Containers");
+});
+
 test("resolveParams throws when app_id is absent and no default is set", () => {
   const ep = ENDPOINTS.find((e) => e.toolName === "get_daily_active_users")!;
   assert.throws(() => resolveParams(ep, {}, baseConfig), /Missing app_id/);
